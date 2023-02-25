@@ -49,7 +49,7 @@ bool q_insert_head(struct list_head *head, char *s)
         return false;
     }
     element->value = tmp_str;
-    INIT_LIST_HEAD(&(element->list));
+    INIT_LIST_HEAD(&element->list);
     list_add(&element->list, head);
     return true;
 }
@@ -66,18 +66,13 @@ bool q_insert_tail(struct list_head *head, char *s)
         element = NULL;
         return false;
     }
-    char *str_tmp = strdup(s);
-    if (!str_tmp) {
-        free(element);
-        return false;
-    }
     char *tmp_str = strdup(s);
     if (!tmp_str) {
         free(element);
         return false;
     }
     element->value = tmp_str;
-    INIT_LIST_HEAD(&(element->list));
+    INIT_LIST_HEAD(&element->list);
     list_add_tail(&element->list, head);
     return true;
 }
