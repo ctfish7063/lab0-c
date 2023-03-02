@@ -184,7 +184,8 @@ void q_swap(struct list_head *head)
     if (!head) {
         return;
     }
-    struct list_head *node, *safe, *tmp_node;
+    struct list_head *node, *safe;
+    struct list_head *tmp_node = NULL;
     int flag = 0;
     struct list_head *tail = head->prev;
     list_for_each_safe (node, safe, head) {
