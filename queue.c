@@ -10,6 +10,7 @@
  *   cppcheck-suppress nullPointer
  */
 
+void q_merge_two(struct list_head *, struct list_head *);
 
 /* Create an empty queue */
 struct list_head *q_new()
@@ -218,7 +219,6 @@ void q_reverse(struct list_head *head)
     head->prev = tmp;
 }
 
-
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
@@ -251,7 +251,22 @@ void q_reverseK(struct list_head *head, int k)
 }
 
 /* Sort elements of queue in ascending order */
-void q_sort(struct list_head *head) {}
+void q_sort(struct list_head *head)
+{
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
+    struct list_head *slow = head->next;
+    for (struct list_head *fast = slow; fast != head && fast->next != head;
+         fast = fast->next->next) {
+        slow = slow->next;
+    }
+    struct list_head left;
+    list_cut_position(&left, head, slow);
+    q_sort(&left);
+    q_sort(head);
+    q_merge_two(&left, head);
+}
 
 /* Remove every node which has a node with a strictly greater value anywhere to
  * the right side of it */
@@ -279,9 +294,51 @@ int q_descend(struct list_head *head)
     return q_size(head);
 }
 
+/*Merge two queue into one sorted queue, which is in qscending order */
+void q_merge_two(struct list_head *L1, struct list_head *L2)
+{
+    if (L1 && L2) {
+        if (list_empty(L1) || list_empty(L2)) {
+            list_splice_tail_init(L2, L1);
+            return;
+        }
+        struct list_head *tail = L1->prev, **node = NULL;
+        L1 = L1->next;
+        L2 = L2->next;
+        for (node = NULL; *node != tail && L2; *node = (*node)->next) {
+            element_t *ele_1 = list_entry(L1, element_t, list);
+            element_t *ele_2 = list_entry(L2, element_t, list);
+            node = strcmp(ele_1->value, ele_2->value) < 0 ? &L1 : &L2;
+            list_move_tail(L1, *node);
+        }
+        struct list_head left;
+        list_cut_position(&left, L1, *node);
+        list_splice_tail_init(L2 ? L2 : &left, L1);
+    }
+    return;
+}
+
 /* Merge all the queues into one sorted queue, which is in ascending order */
 int q_merge(struct list_head *head)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+    if (!head || list_empty(head)) {
+        return 0;
+    }
+    if (list_is_singular(head)) {
+        return 1;
+    }
+    while (q_size(head) > 1) {
+        struct list_head *tail = head->prev;
+        for (struct list_head *start = head->next, *end = tail; start != end;
+             start = start->next, end = end->prev) {
+            queue_contex_t *qct_sta = list_entry(start, queue_contex_t, chain);
+            queue_contex_t *qct_end = list_entry(tail, queue_contex_t, chain);
+            q_merge_two(qct_sta->q, qct_end->q);
+            qct_sta->size = q_size(qct_sta->q);
+            qct_end->size = 0;
+        }
+    }
+    queue_contex_t *qct_res = list_first_entry(head, queue_contex_t, chain);
+    return qct_res->size;
 }
