@@ -185,20 +185,12 @@ void q_swap(struct list_head *head)
     if (!head) {
         return;
     }
-    struct list_head *node, *safe;
-    struct list_head *tmp_node = NULL, *tail = head->prev;
-    int flag = 0;
-    list_for_each_safe (node, safe, head) {
-        list_del_init(node);
-        if ((flag++) ^ 1) {
-            list_add_tail(node, head);
-            list_add_tail(tmp_node, head);
-        } else {
-            tmp_node = node;
-        }
-        if (node == tail) {
+    struct list_head *node;
+    list_for_each (node, head) {
+        if (node->next == head) {
             break;
         }
+        list_move(node, node->next);
     }
 }
 
