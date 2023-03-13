@@ -248,16 +248,17 @@ void q_sort(struct list_head *head)
     if (!head || list_empty(head) || list_is_singular(head)) {
         return;
     }
-    struct list_head *slow = head->next;
-    for (struct list_head *fast = slow; fast != head && fast->next != head;
+    struct list_head *slow = head, *tail = head->prev;
+    for (struct list_head *fast = slow; fast != tail && fast->next != tail;
          fast = fast->next->next) {
         slow = slow->next;
     }
-    struct list_head left;
-    list_cut_position(&left, head, slow);
-    q_sort(&left);
+    struct list_head left, *left_p = &left;
+    INIT_LIST_HEAD(left_p);
+    list_cut_position(left_p, head, slow);
+    q_sort(left_p);
     q_sort(head);
-    q_merge_two(&left, head);
+    q_merge_two(head, left_p);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -286,7 +287,7 @@ int q_descend(struct list_head *head)
     return q_size(head);
 }
 
-/*Merge two queue into one sorted queue, which is in qscending order */
+/*Merge two queue into one sorted queue, which is in ascending order */
 void q_merge_two(struct list_head *L1, struct list_head *L2)
 {
     if (L1 && L2) {
@@ -294,18 +295,16 @@ void q_merge_two(struct list_head *L1, struct list_head *L2)
             list_splice_tail_init(L2, L1);
             return;
         }
-        struct list_head *tail = L1->prev, **node = NULL;
-        L1 = L1->next;
-        L2 = L2->next;
-        for (node = NULL; *node != tail && L2; *node = (*node)->next) {
-            element_t *ele_1 = list_entry(L1, element_t, list);
-            element_t *ele_2 = list_entry(L2, element_t, list);
-            node = strcmp(ele_1->value, ele_2->value) < 0 ? &L1 : &L2;
-            list_move_tail(L1, *node);
+        struct list_head *tail = L1->prev, *node = NULL;
+        for (; node != tail && !list_empty(L2);) {
+            element_t *ele_1 = list_first_entry(L1, element_t, list);
+            element_t *ele_2 = list_first_entry(L2, element_t, list);
+            node = strcmp(ele_1->value, ele_2->value) < 0 ? L1->next : L2->next;
+            list_move_tail(node, L1);
         }
         struct list_head left;
-        list_cut_position(&left, L1, *node);
-        list_splice_tail_init(L2 ? L2 : &left, L1);
+        list_cut_position(&left, L1, tail);
+        list_splice_tail_init(list_empty(L2) ? &left : L2, L1);
     }
     return;
 }
