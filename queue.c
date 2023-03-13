@@ -253,12 +253,11 @@ void q_sort(struct list_head *head)
          fast = fast->next->next) {
         slow = slow->next;
     }
-    struct list_head left, *left_p = &left;
-    INIT_LIST_HEAD(left_p);
-    list_cut_position(left_p, head, slow);
+    struct list_head left;
+    list_cut_position(&left, head, slow);
     q_sort(head);
-    q_sort(left_p);
-    q_merge_two(head, left_p);
+    q_sort(&left);
+    q_merge_two(head, &left);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -291,6 +290,9 @@ int q_descend(struct list_head *head)
 void q_merge_two(struct list_head *L1, struct list_head *L2)
 {
     if (L1 && L2) {
+        if (L1 == L2) {
+            return;
+        }
         if (list_empty(L1) || list_empty(L2)) {
             list_splice_tail_init(L2, L1);
             return;
@@ -321,17 +323,19 @@ int q_merge(struct list_head *head)
         return 0;
     }
     if (list_is_singular(head)) {
-        return 1;
+        queue_contex_t *qct = list_first_entry(head, queue_contex_t, chain);
+        return qct->size;
     }
-    while (q_size(head) > 1) {
-        struct list_head *tail = head->prev;
-        for (struct list_head *start = head->next, *end = tail; start != end;
+    struct list_head *end = head->prev;
+    while (end != head->next) {
+        for (struct list_head *start = head->next;
+             start->prev != end && start != end;
              start = start->next, end = end->prev) {
-            queue_contex_t *qct_sta = list_entry(start, queue_contex_t, chain);
-            queue_contex_t *qct_end = list_entry(tail, queue_contex_t, chain);
-            q_merge_two(qct_sta->q, qct_end->q);
-            qct_sta->size = q_size(qct_sta->q);
-            qct_end->size = 0;
+            queue_contex_t *qct_s = list_entry(start, queue_contex_t, chain);
+            queue_contex_t *qct_e = list_entry(end, queue_contex_t, chain);
+            q_merge_two(qct_s->q, qct_e->q);
+            qct_s->size += qct_e->size;
+            qct_e->size = 0;
         }
     }
     queue_contex_t *qct_res = list_first_entry(head, queue_contex_t, chain);
