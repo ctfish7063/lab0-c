@@ -256,8 +256,8 @@ void q_sort(struct list_head *head)
     struct list_head left, *left_p = &left;
     INIT_LIST_HEAD(left_p);
     list_cut_position(left_p, head, slow);
-    q_sort(left_p);
     q_sort(head);
+    q_sort(left_p);
     q_merge_two(head, left_p);
 }
 
@@ -296,15 +296,19 @@ void q_merge_two(struct list_head *L1, struct list_head *L2)
             return;
         }
         struct list_head *tail = L1->prev, *node = NULL;
-        for (; node != tail && !list_empty(L2);) {
+        while (node != tail && !list_empty(L2)) {
             element_t *ele_1 = list_first_entry(L1, element_t, list);
             element_t *ele_2 = list_first_entry(L2, element_t, list);
             node = strcmp(ele_1->value, ele_2->value) < 0 ? L1->next : L2->next;
             list_move_tail(node, L1);
         }
-        struct list_head left;
-        list_cut_position(&left, L1, tail);
-        list_splice_tail_init(list_empty(L2) ? &left : L2, L1);
+        if (list_empty(L2)) {
+            struct list_head left;
+            list_cut_position(&left, L1, tail);
+            list_splice_tail_init(&left, L1);
+        } else {
+            list_splice_tail_init(L2, L1);
+        }
     }
     return;
 }
