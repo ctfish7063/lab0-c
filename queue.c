@@ -147,32 +147,36 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
-    if (!head || list_empty(head)) {
+    if (!head)
         return false;
-    }
-    struct list_head *node, *safe;
-    list_for_each_safe (node, safe, head) {
-        int flag = 0;
-        element_t *ele_cur = list_entry(node, element_t, list);
+    if (list_empty(head) || list_is_singular(head))
+        return true;
+    struct list_head *cur, *safe;
+    int flag = 0;
+    list_for_each_safe (cur, safe, head) {
+        element_t *ele_cur = list_entry(cur, element_t, list);
         if (!ele_cur->value) {
-            list_del(node);
+            list_del(cur);
             free(ele_cur);
-            continue;
-        }
-        struct list_head *tmp_node = node->next;
-        while (tmp_node != head) {
-            element_t *ele_next = list_entry(tmp_node, element_t, list);
-            tmp_node = tmp_node->next;
-            if (strcmp(ele_cur->value, ele_next->value) == 0) {
-                flag = 1;
-                free(ele_next->value);
-                ele_next->value = NULL;
+            // continue;
+        } else {
+            struct list_head *tmp_node = cur->next;
+            while (tmp_node != head) {
+                element_t *ele_next = list_entry(tmp_node, element_t, list);
+                tmp_node = tmp_node->next;
+                if (strcmp(ele_cur->value, ele_next->value) == 0) {
+                    flag = 1;
+                    free(ele_next->value);
+                    ele_next->value = NULL;
+                } else
+                    break;
             }
-        }
-        if (flag == 1) {
-            list_del(node);
-            free(ele_cur->value);
-            free(ele_cur);
+            if (flag == 1) {
+                flag = 0;
+                list_del(cur);
+                free(ele_cur->value);
+                free(ele_cur);
+            }
         }
     }
     return true;
