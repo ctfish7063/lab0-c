@@ -151,32 +151,28 @@ bool q_delete_dup(struct list_head *head)
         return false;
     if (list_empty(head) || list_is_singular(head))
         return true;
-    struct list_head *cur, *safe;
+    struct list_head *cur = head->next;
     int flag = 0;
-    list_for_each_safe (cur, safe, head) {
+    while (cur != head) {
         element_t *ele_cur = list_entry(cur, element_t, list);
-        if (!ele_cur->value) {
-            list_del(cur);
+        struct list_head *tmp_node = cur->next;
+        while (tmp_node != head) {
+            element_t *ele_tmp = list_entry(tmp_node, element_t, list);
+            tmp_node = tmp_node->next;
+            if (strcmp(ele_cur->value, ele_tmp->value) == 0) {
+                flag = 1;
+                list_del(tmp_node->prev);
+                free(ele_tmp->value);
+                free(ele_tmp);
+            } else
+                break;
+        }
+        cur = cur->next;
+        if (flag) {
+            flag = 0;
+            list_del(cur->prev);
+            free(ele_cur->value);
             free(ele_cur);
-            // continue;
-        } else {
-            struct list_head *tmp_node = cur->next;
-            while (tmp_node != head) {
-                element_t *ele_next = list_entry(tmp_node, element_t, list);
-                tmp_node = tmp_node->next;
-                if (strcmp(ele_cur->value, ele_next->value) == 0) {
-                    flag = 1;
-                    free(ele_next->value);
-                    ele_next->value = NULL;
-                } else
-                    break;
-            }
-            if (flag == 1) {
-                flag = 0;
-                list_del(cur);
-                free(ele_cur->value);
-                free(ele_cur);
-            }
         }
     }
     return true;
