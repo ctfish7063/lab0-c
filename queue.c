@@ -218,28 +218,20 @@ void q_reverseK(struct list_head *head, int k)
     if (!head || list_empty(head) || list_is_singular(head)) {
         return;
     }
+    struct list_head left, *tail = head->prev;
     int len = q_size(head);
-    for (struct list_head *cur = head->next, *node = head->next; cur && node;
-         cur = node) {
-        if (len < k)
-            break;
-        node = cur;
-        struct list_head *start = node;
-        node = node->next;
-        for (int i = 1; i < k - 1; i++) {
-            struct list_head *tmp = node->next;
-            node->next = node->prev;
-            node->prev = tmp;
-            node = node->prev;
+    while (len >= k) {
+        struct list_head *node = head;
+        for (int i = 0; i < k; i++) {
+            node = node->next;
         }
-        struct list_head *tmp1 = start->next;
-        struct list_head *tmp2 = start->prev;
-        start->next = node->next;
-        start->prev = node->prev;
-        node->next = tmp1;
-        node->prev = tmp2;
+        list_cut_position(&left, head, node);
+        q_reverse(&left);
+        list_splice_tail_init(&left, head);
         len -= k;
     }
+    list_cut_position(&left, head, tail);
+    list_splice_tail_init(&left, head);
 }
 
 /* Sort elements of queue in ascending order */
