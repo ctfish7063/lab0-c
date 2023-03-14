@@ -263,8 +263,8 @@ int q_descend(struct list_head *head)
     if (list_is_singular(head)) {
         return 1;
     }
-    struct list_head *tail = head->prev, *node = tail;
-    while (node != head->next) {
+    struct list_head *node = head->prev;
+    while (node != head && node != head->next) {
         struct list_head *prev = node->prev;
         element_t *cur_ele = list_entry(node, element_t, list);
         element_t *prev_ele = list_entry(prev, element_t, list);
@@ -272,8 +272,9 @@ int q_descend(struct list_head *head)
             list_del(prev);
             free(prev_ele->value);
             free(prev_ele);
+        } else {
+            node = prev;
         }
-        node = node->prev;
     }
     return q_size(head);
 }
