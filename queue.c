@@ -129,13 +129,10 @@ bool q_delete_mid(struct list_head *head)
         return false;
     }
     struct list_head *slow = head->next;
-    struct list_head *tail = head->prev;
-    tail->next = NULL;  // unlink tail and head
-    for (struct list_head *fast = head->next; fast && fast->next;
-         fast = fast->next->next) {
+    for (struct list_head *fast = head->next;
+         fast != head && fast->next != head; fast = fast->next->next) {
         slow = slow->next;
     }
-    tail->next = head;  // relink tail and head
     list_del(slow);
     element_t *ele = list_entry(slow, element_t, list);
     free(ele->value);
