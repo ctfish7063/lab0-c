@@ -37,7 +37,7 @@ void q_free(struct list_head *l)
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
-    if (!head || !s) {
+    if (!head) {
         return false;
     }
     element_t *element = malloc(sizeof(element_t));
@@ -57,7 +57,7 @@ bool q_insert_head(struct list_head *head, char *s)
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
-    if (!head || !s) {
+    if (!head) {
         return false;
     }
     element_t *element = malloc(sizeof(element_t));
@@ -287,7 +287,8 @@ void q_merge_two(struct list_head *L1, struct list_head *L2)
         while (node != tail && !list_empty(L2)) {
             element_t *ele_1 = list_first_entry(L1, element_t, list);
             element_t *ele_2 = list_first_entry(L2, element_t, list);
-            node = strcmp(ele_1->value, ele_2->value) < 0 ? L1->next : L2->next;
+            node =
+                strcmp(ele_1->value, ele_2->value) <= 0 ? L1->next : L2->next;
             list_move_tail(node, L1);
         }
         if (list_empty(L2)) {
