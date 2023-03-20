@@ -44,12 +44,11 @@ bool q_insert_head(struct list_head *head, char *s)
     if (!element) {
         return false;
     }
-    char *tmp_str = strdup(s);
-    if (!tmp_str) {
+    element->value = strdup(s);
+    if (!element->value) {
         free(element);
         return false;
     }
-    element->value = tmp_str;
     INIT_LIST_HEAD(&element->list);
     list_add(&element->list, head);
     return true;
@@ -63,16 +62,13 @@ bool q_insert_tail(struct list_head *head, char *s)
     }
     element_t *element = malloc(sizeof(element_t));
     if (!element) {
-        free(element);
-        element = NULL;
         return false;
     }
-    char *tmp_str = strdup(s);
-    if (!tmp_str) {
+    element->value = strdup(s);
+    if (!element->value) {
         free(element);
         return false;
     }
-    element->value = tmp_str;
     INIT_LIST_HEAD(&element->list);
     list_add_tail(&element->list, head);
     return true;
