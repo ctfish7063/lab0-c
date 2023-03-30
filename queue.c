@@ -10,6 +10,9 @@
  *   cppcheck-suppress nullPointer
  */
 
+/*Merge two queues into one queue*/
+void q_merge_two(struct list_head *L1, struct list_head *L2);
+
 
 /* Create an empty queue */
 struct list_head *q_new()
@@ -147,8 +150,54 @@ void q_reverseK(struct list_head *head, int k)
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
+/* Merge two queues into the first parameter queue, which is in ascending
+ * order*/
+void q_merge_two(struct list_head *L1, struct list_head *L2)
+{
+    if (L1 && L2) {
+        if (L1 == L2) {
+            return;
+        }
+        if (list_empty(L1) || list_empty(L2)) {
+            list_splice_tail_init(L2, L1);
+            return;
+        }
+        struct list_head *tail = L1->prev, *node = NULL;
+        while (node != tail && !list_empty(L2)) {
+            element_t *ele_1 = list_first_entry(L1, element_t, list);
+            element_t *ele_2 = list_first_entry(L2, element_t, list);
+            node = strcmp(ele_1->value, ele_2->value) < 0 ? L1->next : L2->next;
+            list_move_tail(node, L1);
+        }
+        if (list_empty(L2)) {
+            struct list_head left;
+            list_cut_position(&left, L1, tail);
+            list_splice_tail_init(&left, L1);
+        } else {
+            list_splice_tail_init(L2, L1);
+        }
+    }
+    return;
+}
+
 /* Sort elements of queue in ascending order */
-void q_sort(struct list_head *head) {}
+void q_sort(struct list_head *head)
+{
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
+    struct list_head *slow = head, *tail = head->prev;
+    for (struct list_head *fast = slow; fast != tail && fast->next != tail;
+         fast = fast->next->next) {
+        slow = slow->next;
+    }
+    struct list_head left;
+    list_cut_position(&left, head, slow);
+    q_sort(head);
+    q_sort(&left);
+    q_merge_two(head, &left);
+}
+
 
 /* Remove every node which has a node with a strictly greater value anywhere to
  * the right side of it */
