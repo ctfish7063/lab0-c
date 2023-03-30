@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +10,9 @@
  * following line.
  *   cppcheck-suppress nullPointer
  */
+
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 
 /*Merge two queues into one queue*/
 void q_merge_two(struct list_head *L1, struct list_head *L2);
@@ -229,34 +233,36 @@ void q_reverseK(struct list_head *head, int k)
     }
     list_cut_position(&left, head, tail);
     list_splice_tail_init(&left, head);
-
 }
 
 /* Merge two queues into the first parameter queue, which is in ascending
  * order*/
 void q_merge_two(struct list_head *L1, struct list_head *L2)
 {
-    if (L1 && L2) {
-        if (L1 == L2) {
+    if (likely(L1 && L2)) {
+        if (unlikely(L1 == L2)) {
             return;
-        }
-        if (list_empty(L1) || list_empty(L2)) {
+        } else if (unlikely(list_empty(L1))) {
             list_splice_tail_init(L2, L1);
             return;
-        }
-        struct list_head *tail = L1->prev, *node = NULL;
-        while (node != tail && !list_empty(L2)) {
-            element_t *ele_1 = list_first_entry(L1, element_t, list);
-            element_t *ele_2 = list_first_entry(L2, element_t, list);
-            node = strcmp(ele_1->value, ele_2->value) < 0 ? L1->next : L2->next;
-            list_move_tail(node, L1);
-        }
-        if (list_empty(L2)) {
-            struct list_head left;
-            list_cut_position(&left, L1, tail);
-            list_splice_tail_init(&left, L1);
+        } else if (unlikely(list_empty(L2))) {
+            return;
         } else {
-            list_splice_tail_init(L2, L1);
+            struct list_head *tail = L1->prev, *node = NULL;
+            while (node != tail && !list_empty(L2)) {
+                element_t *ele_1 = list_first_entry(L1, element_t, list);
+                element_t *ele_2 = list_first_entry(L2, element_t, list);
+                node = strcmp(ele_1->value, ele_2->value) < 0 ? L1->next
+                                                              : L2->next;
+                list_move_tail(node, L1);
+            }
+            if (list_empty(L2)) {
+                struct list_head left;
+                list_cut_position(&left, L1, tail);
+                list_splice_tail_init(&left, L1);
+            } else {
+                list_splice_tail_init(L2, L1);
+            }
         }
     }
     return;
