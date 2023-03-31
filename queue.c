@@ -219,7 +219,8 @@ void q_reverseK(struct list_head *head, int k)
     if (!head || list_empty(head) || list_is_singular(head)) {
         return;
     }
-    struct list_head left, *tail = head->prev;
+    LIST_HEAD(left);
+    struct list_head *tail = head->prev;
     int len = q_size(head);
     while (len >= k) {
         struct list_head *node = head;
@@ -242,22 +243,23 @@ void q_merge_two(struct list_head *L1, struct list_head *L2)
     if (likely(L1 && L2)) {
         if (unlikely(L1 == L2)) {
             return;
+        } else if (unlikely(list_empty(L2))) {
+            return;
         } else if (unlikely(list_empty(L1))) {
             list_splice_tail_init(L2, L1);
-            return;
-        } else if (unlikely(list_empty(L2))) {
             return;
         } else {
             struct list_head *tail = L1->prev, *node = NULL;
             while (node != tail && !list_empty(L2)) {
                 element_t *ele_1 = list_first_entry(L1, element_t, list);
                 element_t *ele_2 = list_first_entry(L2, element_t, list);
-                node = strcmp(ele_1->value, ele_2->value) < 0 ? L1->next
-                                                              : L2->next;
+                node = strcmp(ele_1->value, ele_2->value) < 0 ? &ele_1->list
+                                                              : &ele_2->list;
                 list_move_tail(node, L1);
+                assert(list_entry(node, element_t, list)->value != NULL);
             }
             if (list_empty(L2)) {
-                struct list_head left;
+                LIST_HEAD(left);
                 list_cut_position(&left, L1, tail);
                 list_splice_tail_init(&left, L1);
             } else {
@@ -274,12 +276,13 @@ void q_sort(struct list_head *head)
     if (!head || list_empty(head) || list_is_singular(head)) {
         return;
     }
-    struct list_head *slow = head, *tail = head->prev;
-    for (struct list_head *fast = slow; fast != tail && fast->next != tail;
-         fast = fast->next->next) {
+    struct list_head *slow = head, *fast = head;
+    do {
+        fast = fast->next->next;
         slow = slow->next;
-    }
-    struct list_head left;
+    } while (fast != head && fast->next != head);
+    assert(slow != head);
+    LIST_HEAD(left);
     list_cut_position(&left, head, slow);
     q_sort(head);
     q_sort(&left);
