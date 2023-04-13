@@ -890,21 +890,25 @@ static bool do_merge(int argc, char *argv[])
     return ok && !error_check();
 }
 
-/* Shuffle queue using FIsher-Yates shuffle*/
+/* Shuffle queue using Fisher-Yates shuffle*/
 void q_shuffle(struct list_head *head)
 {
     if (!head || list_empty(head) || list_is_singular(head)) {
         return;
     }
     int len = q_size(head);
-    for (int i = len - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        struct list_head *node = head->next;
+    int j = random() % len;
+    struct list_head *node = head->next;
+    if (j != len - 1) {
         for (int k = 0; k < j; k++) {
             node = node->next;
         }
-        list_move_tail(node, head);
+        struct list_head *tmp = head->prev;
+        list_move(tmp, node);
     }
+    list_del_init(node);
+    q_shuffle(head);
+    list_add_tail(node, head);
 }
 
 static bool do_shuffle(int argc, char *argv[])
